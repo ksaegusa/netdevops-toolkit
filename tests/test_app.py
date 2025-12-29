@@ -48,3 +48,16 @@ def test_parse_with_template_body():
     assert response.status_code == 200
     assert "hello" in response.text
     assert "world" in response.text
+
+
+def test_regex_endpoint_extracts_lines():
+    response = client.post(
+        "/regex",
+        data={
+            "pattern": "ERROR",
+            "raw_text": "INFO ok\nERROR failed\nWARN note",
+        },
+    )
+    assert response.status_code == 200
+    assert "ERROR failed" in response.text
+    assert "WARN note" not in response.text

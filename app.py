@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,32 @@ def parse_textfsm_with_template(raw_text: str, template_body: str) -> list[dict[
         fsm = TextFSM(handle)
     parsed = fsm.ParseText(raw_text)
     return [dict(zip(fsm.header, row)) for row in parsed]
+
+
+def read_text_payload(raw_text: str, text_upload: UploadFile | None) -> tuple[str, str]:
+    text_payload = raw_text
+    if not raw_text.strip() and text_upload and text_upload.filename:
+        try:
+            text_bytes = text_upload.file.read()
+            text_payload = text_bytes.decode("utf-8", errors="replace")
+        except Exception as exc:  # pragma: no cover - surface upload error
+            return "", f"テキストの読み込みに失敗しました: {exc}"
+    if len(text_payload.encode("utf-8", errors="replace")) > MAX_INPUT_BYTES:
+        return "", "入力サイズが上限を超えています。"
+    return text_payload, ""
+
+
+def parse_regex_flags(flag_names: list[str]) -> int:
+    flags = 0
+    mapping = {
+        "IGNORECASE": re.IGNORECASE,
+        "MULTILINE": re.MULTILINE,
+        "DOTALL": re.DOTALL,
+    }
+    for name in flag_names:
+        if name in mapping:
+            flags |= mapping[name]
+    return flags
 
 
 def normalize_jmespath_query(query: str) -> str:
@@ -106,12 +133,55 @@ def index(request: Request) -> HTMLResponse:
 
 @app.get("/regex", response_class=HTMLResponse)
 def regex_page(request: Request) -> HTMLResponse:
-    return jinja.TemplateResponse(request, "regex.html", {})
+    return jinja.TemplateResponse(
+        request,
+        "regex.html",
+        {
+            "error": "",
+            "matches": [],
+            "match_count": 0,
+        },
+    )
 
 
 @app.get("/diff", response_class=HTMLResponse)
 def diff_page(request: Request) -> HTMLResponse:
     return jinja.TemplateResponse(request, "diff.html", {})
+
+
+@app.post("/regex", response_class=HTMLResponse)
+def regex_run(
+    request: Request,
+    pattern: str = Form(""),
+    raw_text: str = Form(""),
+    text_upload: UploadFile | None = None,
+    flags: list[str] = Form([]),
+) -> HTMLResponse:
+    error = ""
+    matches: list[str] = []
+
+    text_payload, error = read_text_payload(raw_text, text_upload)
+    if not error and not pattern.strip():
+        error = "正規表現パターンを入力してください。"
+
+    if not error:
+        try:
+            compiled = re.compile(pattern, parse_regex_flags(flags))
+            for line in text_payload.splitlines():
+                if compiled.search(line):
+                    matches.append(line)
+        except re.error as exc:
+            error = f"正規表現の解析に失敗しました: {exc}"
+
+    return jinja.TemplateResponse(
+        request,
+        "partials/regex_result.html",
+        {
+            "error": error,
+            "matches": matches,
+            "match_count": len(matches),
+        },
+    )
 
 
 @app.post("/parse", response_class=HTMLResponse)
@@ -136,20 +206,12 @@ def parse(
         else:
             template_from_upload = template_upload
 
-    text_payload = raw_text
-    if not raw_text.strip() and text_upload and text_upload.filename:
-        try:
-            text_bytes = text_upload.file.read()
-            text_payload = text_bytes.decode("utf-8", errors="replace")
-        except Exception as exc:  # pragma: no cover - surface upload error
-            error = f"テキストの読み込みに失敗しました: {exc}"
+    text_payload, error = read_text_payload(raw_text, text_upload)
 
     if not error:
         eval_query = normalize_jmespath_for_eval(jmespath_query)
         if not template_name and not template_from_upload and not template_body.strip():
             error = "テンプレートを選択するか、アップロード、または直接入力してください。"
-        elif len(text_payload.encode("utf-8", errors="replace")) > MAX_INPUT_BYTES:
-            error = "入力サイズが上限を超えています。"
         else:
             try:
                 if template_body.strip():
@@ -272,4 +334,15 @@ def download_yaml(parsed_json: str = Form("")) -> Response:
         yaml_text,
         media_type="application/x-yaml",
         headers={"Content-Disposition": "attachment; filename=parsed.yaml"},
+    )
+
+
+@app.post("/download/regex")
+def download_regex(matches_text: str = Form("")) -> Response:
+    if not matches_text.strip():
+        return Response("No data", status_code=400)
+    return Response(
+        matches_text,
+        media_type="text/plain",
+        headers={"Content-Disposition": "attachment; filename=matches.txt"},
     )

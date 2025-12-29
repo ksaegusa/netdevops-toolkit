@@ -1,0 +1,23 @@
+<div class="rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+  {% if error %}
+    <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
+  {% else %}
+    <div class="space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="text-base font-semibold">抽出結果</h3>
+        <div class="text-sm text-ink/60">件数: {{ match_count }}</div>
+      </div>
+      {% if matches %}
+        <div class="space-y-3">
+          <form method="post" action="/download/regex">
+            <textarea name="matches_text" class="hidden">{{ matches | join('\n') | safe }}</textarea>
+            <button type="submit" class="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]">TXT</button>
+          </form>
+          <pre class="max-h-[420px] overflow-auto rounded-2xl bg-ink px-4 py-4 text-xs text-white"><code>{{ matches | join('\n') }}</code></pre>
+        </div>
+      {% else %}
+        <p class="text-sm text-ink/60">一致する行がありません。</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
