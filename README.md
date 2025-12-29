@@ -5,7 +5,8 @@
 * 対象機能（MVP）
 
   * **Parser**：テンプレで構造化 → 表表示 → JMESPathで絞り込み → CSV/YAMLダウンロード
-  * **Regex/Diff**：画面のみ用意（機能はこれから）
+  * **Regex**：行抽出 → 件数表示 → TXTダウンロード
+  * **Diff**：画面のみ用意（機能はこれから）
 
 ## 2. ユーザーストーリー（MVP）
 
@@ -33,7 +34,7 @@
 * CSV/YAMLダウンロードに対応
 * 大きい出力でも落ちない（サイズ上限・制限）
 
-### 3.3 Regex（これから）
+### 3.3 Regex
 
 * pattern入力（オプションで flags: IGNORECASE/MULTILINE 等）
 * マッチ行の一覧と件数
@@ -57,8 +58,8 @@
 
 ## 5. 受け入れ条件（MVPのDone）
 
-* Parser画面が動作し、結果が部分更新（HTMX）で表示される
-* Regex/Diff は画面のみ用意されている
+* Parser/Regex 画面が動作し、結果が部分更新（HTMX）で表示される
+* Diff は画面のみ用意されている
 * 入力エラー時に落ちずに理由が表示される
 * Dockerで `docker compose up` で起動できる
 * AWS,AppRunnerにデプロイしたい
