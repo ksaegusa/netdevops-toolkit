@@ -1,0 +1,71 @@
+<div class="rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+  {% if error %}
+    <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
+  {% else %}
+    <div class="space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="text-base font-semibold">パース結果</h3>
+        <div class="flex flex-wrap gap-2">
+          <form method="post" action="/download/csv">
+            <textarea name="parsed_json" class="hidden">{{ parsed_json | safe }}</textarea>
+            <button type="submit" class="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]">CSV</button>
+          </form>
+          <form method="post" action="/download/yaml">
+            <textarea name="parsed_json" class="hidden">{{ parsed_json | safe }}</textarea>
+            <button type="submit" class="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]">YAML</button>
+          </form>
+        </div>
+      </div>
+      {% if parsed_rows %}
+        <div class="overflow-x-auto rounded-2xl border border-black/10">
+          <table class="min-w-full border-collapse text-left text-sm">
+            <thead class="bg-sand">
+              <tr>
+                {% for header in parsed_headers %}
+                  <th class="border-b border-black/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink/70">
+                    {{ header }}
+                  </th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in parsed_rows %}
+                <tr class="odd:bg-white even:bg-black/[0.02]">
+                  {% for header in parsed_headers %}
+                    <td class="border-b border-black/5 px-4 py-3">{{ row[header] }}</td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-sm text-ink/60">結果がありません。</p>
+      {% endif %}
+      <div class="space-y-3">
+        <h3 class="text-base font-semibold">JMESPath</h3>
+        <form
+          hx-post="/filter"
+          hx-target="#result"
+          hx-swap="innerHTML"
+          class="flex flex-col gap-3 md:flex-row md:items-center"
+        >
+          <textarea name="parsed_json" class="hidden">{{ parsed_json | safe }}</textarea>
+          <textarea
+            name="jmespath_query"
+            rows="2"
+            placeholder="[].{intf: INTERFACE, ip: IP_ADDRESS}"
+            class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+          >{{ jmespath_query }}</textarea>
+          <button
+            type="submit"
+            class="whitespace-nowrap rounded-full bg-ember px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-emberDark"
+          >
+            実行
+          </button>
+        </form>
+        <pre class="max-h-[420px] overflow-auto rounded-2xl bg-ink px-4 py-4 text-xs text-white"><code>{{ filtered_json }}</code></pre>
+      </div>
+    </div>
+  {% endif %}
+</div>

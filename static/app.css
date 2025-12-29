@@ -1,0 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+  --bg: #f1efe8;
+  --ink: #1f1a17;
+  --accent: #c0652b;
+  --accent-dark: #8f4a1f;
+  --card: #ffffff;
+  --muted: #6b625c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  background: radial-gradient(circle at top, #fff7e6, var(--bg));
+  color: var(--ink);
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.hero {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+h1 {
+  font-size: clamp(32px, 4vw, 52px);
+  margin: 0 0 12px;
+}
+
+.lead {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(25, 18, 14, 0.12);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+label span {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e0d6ce;
+  font-family: inherit;
+  font-size: 14px;
+  background: #fffdf8;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+.result {
+  margin-top: 40px;
+}
+
+.result-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #efe4d9;
+}
+
+.result-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+pre {
+  background: #1f1a17;
+  color: #f7efe6;
+  padding: 16px;
+  border-radius: 12px;
+  overflow: auto;
+  max-height: 380px;
+}
+
+.error {
+  color: #b21e1e;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 28px 16px 60px;
+  }
+}

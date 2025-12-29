@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto flex max-w-screen-2xl flex-col gap-10 px-6 pb-16 pt-4">
+  <div class="space-y-6">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ember">Parser</p>
+    <h1 class="font-display text-4xl uppercase tracking-[0.08em] md:text-5xl">STRUCTURE THE LOG</h1>
+    <p class="max-w-xl text-base text-ink/70 md:text-lg">TextFSM + JMESPathの動作確認</p>
+  </div>
+  <div class="w-full rounded-3xl border border-black/10 bg-white p-6 shadow-xl">
+    <form
+      id="parser-form"
+      hx-post="/parse"
+      hx-target="#result"
+      hx-swap="innerHTML"
+      enctype="multipart/form-data"
+      class="space-y-6"
+    >
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div class="space-y-4">
+          <label class="block">
+            <span class="text-sm font-semibold">テンプレート</span>
+            <select
+              name="template_name"
+              class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+              hx-get="/template-editor"
+              hx-target="#template-editor"
+              hx-trigger="change"
+              hx-include="this"
+            >
+              <option value="">選択してください</option>
+              {% for name in templates %}
+                <option value="{{ name }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <div id="template-editor">
+            {% include "partials/template_editor.html" %}
+          </div>
+          <label class="block">
+            <span class="text-sm font-semibold">テンプレートをアップロード (.textfsm)</span>
+            <input
+              type="file"
+              name="template_upload"
+              accept=".textfsm"
+              class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+        <div class="space-y-4">
+          <label class="block">
+            <span class="text-sm font-semibold">show出力</span>
+            <textarea
+              name="raw_text"
+              rows="14"
+              placeholder="show ip interface brief の結果を貼り付け"
+              class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+            ></textarea>
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold">テキストをアップロード</span>
+            <input
+              type="file"
+              name="text_upload"
+              accept=".txt,.log,.out,.text"
+              class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+      </div>
+      <p class="text-xs text-ink/60">アップロードしたファイルは保存せず、解析にのみ使用します。</p>
+      <button
+        type="submit"
+        class="w-full rounded-full bg-ember px-4 py-3 text-sm font-semibold text-white transition hover:bg-emberDark"
+      >
+        パースする
+      </button>
+    </form>
+  </div>
+</section>
+
+<section class="mx-auto max-w-screen-2xl px-6 pb-20" id="result">
+  {% include "partials/result.html" %}
+</section>
+{% endblock %}

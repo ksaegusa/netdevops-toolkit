@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NetDevOps-Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["\"Alegreya Sans SC\"", "sans-serif"],
+              body: ["\"Noto Sans JP\"", "sans-serif"],
+            },
+            colors: {
+              sand: "#eaf3ff",
+              ink: "#13233b",
+              ember: "#2b6cb0",
+              emberDark: "#1f4f7a",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@500;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" />
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  </head>
+  <body class="font-body">
+    <main class="min-h-screen bg-gradient-to-b from-white via-sand to-white text-ink">
+      <header class="mx-auto flex max-w-screen-2xl items-center justify-between px-6 pb-6 pt-8">
+        <a href="/" class="text-lg font-semibold tracking-wide">NetDevOps-Toolkit</a>
+        <nav class="flex flex-wrap items-center gap-3 text-sm font-semibold">
+          <a href="/" class="rounded-full px-3 py-1 transition hover:bg-black/5">Parser</a>
+          <a href="/regex" class="rounded-full px-3 py-1 transition hover:bg-black/5">Regex</a>
+          <a href="/diff" class="rounded-full px-3 py-1 transition hover:bg-black/5">Diff</a>
+        </nav>
+      </header>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
