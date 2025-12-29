@@ -1,0 +1,18 @@
+<div class="rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+  {% if error %}
+    <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
+  {% else %}
+    {% if diff_lines %}
+      <div class="space-y-3">
+        <h3 class="text-base font-semibold">差分結果</h3>
+        <pre class="max-h-[520px] overflow-auto rounded-2xl bg-ink px-4 py-4 text-xs leading-tight text-white"><code>
+{% for item in diff_lines %}
+<span class="text-white">{% if order_sensitive and item.line_no %}{{ "%4d"|format(item.line_no) }}{% else %}    {% endif %} | {{ "  " * item.depth }}<span class="{% if item.kind == 'add' %}text-emerald-300{% elif item.kind == 'remove' %}text-red-300{% else %}text-white{% endif %}">{{ item.sign }} {{ item.line }}</span></span>
+{% endfor %}
+</code></pre>
+      </div>
+    {% else %}
+      <p class="text-sm text-ink/60">差分がありません。</p>
+    {% endif %}
+  {% endif %}
+</div>

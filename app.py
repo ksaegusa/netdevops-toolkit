@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import csv
+import difflib
 import io
 import json
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +47,174 @@ def parse_textfsm_with_template(raw_text: str, template_body: str) -> list[dict[
         fsm = TextFSM(handle)
     parsed = fsm.ParseText(raw_text)
     return [dict(zip(fsm.header, row)) for row in parsed]
+
+
+@dataclass
+class ConfigNode:
+    line: str
+    indent: int
+    line_no: int
+    children: list["ConfigNode"] = field(default_factory=list)
+
+
+def parse_config(raw_config: str, ignore_patterns: list[re.Pattern[str]]) -> list[ConfigNode]:
+    root = ConfigNode(line="ROOT", indent=-1, line_no=0)
+    path: list[ConfigNode] = [root]
+    for line_no, raw_line in enumerate(raw_config.splitlines(), start=1):
+        trimmed = raw_line.strip()
+        if not trimmed or trimmed.startswith("!"):
+            continue
+        if any(pattern.search(trimmed) for pattern in ignore_patterns):
+            continue
+
+        indent = 0
+        for ch in raw_line:
+            if ch == " ":
+                indent += 1
+            else:
+                break
+
+        node = ConfigNode(line=trimmed, indent=indent, line_no=line_no)
+        while len(path) > 1 and path[-1].indent >= indent:
+            path.pop()
+        parent = path[-1]
+        parent.children.append(node)
+        path.append(node)
+    return root.children
+
+
+def filter_nodes(nodes: list[ConfigNode], target: str) -> list[ConfigNode]:
+    if not target:
+        return nodes
+    return [node for node in nodes if node.line.startswith(target)]
+
+
+def to_node_map(nodes: list[ConfigNode]) -> dict[str, ConfigNode]:
+    return {node.line: node for node in nodes}
+
+
+def has_node_diff(
+    running: list[ConfigNode],
+    candidate: list[ConfigNode],
+    order_sensitive: bool,
+) -> bool:
+    if len(running) != len(candidate):
+        return True
+    if order_sensitive:
+        for run_node, cand_node in zip(running, candidate):
+            if run_node.line != cand_node.line:
+                return True
+            if has_node_diff(run_node.children, cand_node.children, order_sensitive):
+                return True
+        return False
+    running_map = to_node_map(running)
+    candidate_map = to_node_map(candidate)
+    for line in running_map:
+        if line not in candidate_map:
+            return True
+    for cand_node in candidate:
+        run_node = running_map[cand_node.line]
+        if has_node_diff(run_node.children, cand_node.children, order_sensitive):
+            return True
+    return False
+
+
+@dataclass
+class DiffLine:
+    sign: str
+    line: str
+    depth: int
+    kind: str
+    line_no: int | None = None
+
+
+def add_subtree(lines: list[DiffLine], node: ConfigNode, sign: str, depth: int, kind: str) -> None:
+    lines.append(
+        DiffLine(sign=sign, line=node.line, depth=depth, kind=kind, line_no=node.line_no)
+    )
+    for child in node.children:
+        add_subtree(lines, child, sign, depth + 1, kind)
+
+
+def diff_config(
+    running: list[ConfigNode],
+    candidate: list[ConfigNode],
+    order_sensitive: bool,
+) -> list[DiffLine]:
+    if order_sensitive:
+        return diff_config_ordered(running, candidate, depth=0)
+    return diff_config_unordered(running, candidate, depth=0)
+
+
+def diff_config_unordered(
+    running: list[ConfigNode],
+    candidate: list[ConfigNode],
+    depth: int,
+) -> list[DiffLine]:
+    lines: list[DiffLine] = []
+    running_map = to_node_map(running)
+    candidate_map = to_node_map(candidate)
+
+    for run_node in running:
+        if run_node.line not in candidate_map:
+            add_subtree(lines, run_node, "-", depth=depth, kind="remove")
+
+    for cand_node in candidate:
+        run_node = running_map.get(cand_node.line)
+        if run_node is None:
+            add_subtree(lines, cand_node, "+", depth=depth, kind="add")
+        else:
+            if has_node_diff(run_node.children, cand_node.children, order_sensitive=False):
+                lines.append(
+                    DiffLine(
+                        sign=" ",
+                        line=cand_node.line,
+                        depth=depth,
+                        kind="context",
+                        line_no=cand_node.line_no,
+                    )
+                )
+                lines.extend(diff_config_unordered(run_node.children, cand_node.children, depth + 1))
+
+    return lines
+
+
+def diff_config_ordered(
+    running: list[ConfigNode],
+    candidate: list[ConfigNode],
+    depth: int,
+) -> list[DiffLine]:
+    lines: list[DiffLine] = []
+    old_lines = [node.line for node in running]
+    new_lines = [node.line for node in candidate]
+    matcher = difflib.SequenceMatcher(a=old_lines, b=new_lines)
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for old_index, new_index in zip(range(i1, i2), range(j1, j2)):
+                run_node = running[old_index]
+                cand_node = candidate[new_index]
+                if has_node_diff(run_node.children, cand_node.children, order_sensitive=True):
+                    lines.append(
+                        DiffLine(
+                            sign=" ",
+                            line=cand_node.line,
+                            depth=depth,
+                            kind="context",
+                            line_no=cand_node.line_no,
+                        )
+                    )
+                    lines.extend(
+                        diff_config_ordered(run_node.children, cand_node.children, depth + 1)
+                    )
+        elif tag in ("delete", "replace"):
+            for run_node in running[i1:i2]:
+                add_subtree(lines, run_node, "-", depth=depth, kind="remove")
+        if tag in ("insert", "replace"):
+            for cand_node in candidate[j1:j2]:
+                add_subtree(lines, cand_node, "+", depth=depth, kind="add")
+
+    return lines
 
 
 def read_text_payload(raw_text: str, text_upload: UploadFile | None) -> tuple[str, str]:
@@ -163,6 +333,93 @@ def regex_text_preview(
 @app.get("/diff", response_class=HTMLResponse)
 def diff_page(request: Request) -> HTMLResponse:
     return jinja.TemplateResponse(request, "diff.html", {})
+
+
+@app.post("/diff/old-preview", response_class=HTMLResponse)
+def diff_old_preview(
+    request: Request,
+    old_upload: UploadFile | None = None,
+) -> HTMLResponse:
+    text_payload, error = read_text_payload("", old_upload)
+    return jinja.TemplateResponse(
+        request,
+        "partials/diff_textarea_old.html",
+        {
+            "old_text": text_payload,
+            "old_error": error,
+        },
+    )
+
+
+@app.post("/diff/new-preview", response_class=HTMLResponse)
+def diff_new_preview(
+    request: Request,
+    new_upload: UploadFile | None = None,
+) -> HTMLResponse:
+    text_payload, error = read_text_payload("", new_upload)
+    return jinja.TemplateResponse(
+        request,
+        "partials/diff_textarea_new.html",
+        {
+            "new_text": text_payload,
+            "new_error": error,
+        },
+    )
+
+
+@app.post("/diff", response_class=HTMLResponse)
+def diff_run(
+    request: Request,
+    old_text: str = Form(""),
+    new_text: str = Form(""),
+    ignore_patterns: str = Form(""),
+    target: str = Form(""),
+    order_sensitive: str = Form(""),
+    old_upload: UploadFile | None = None,
+    new_upload: UploadFile | None = None,
+) -> HTMLResponse:
+    error = ""
+    compiled_patterns: list[re.Pattern[str]] = []
+    if ignore_patterns.strip():
+        for line in ignore_patterns.splitlines():
+            pattern = line.strip()
+            if not pattern:
+                continue
+            try:
+                compiled_patterns.append(re.compile(pattern))
+            except re.error as exc:
+                error = f"正規表現の解析に失敗しました: {exc}"
+                break
+
+    diff_lines: list[DiffLine] = []
+    if not error:
+        old_payload, error = read_text_payload(old_text, old_upload)
+    if not error:
+        new_payload, error = read_text_payload(new_text, new_upload)
+
+    if not error:
+        if not old_payload.strip() or not new_payload.strip():
+            error = "旧設定と新設定の両方を入力してください。"
+        else:
+            running_nodes = parse_config(old_payload, compiled_patterns)
+            candidate_nodes = parse_config(new_payload, compiled_patterns)
+            running_nodes = filter_nodes(running_nodes, target.strip())
+            candidate_nodes = filter_nodes(candidate_nodes, target.strip())
+            diff_lines = diff_config(
+                running_nodes,
+                candidate_nodes,
+                order_sensitive=order_sensitive == "on",
+            )
+
+    return jinja.TemplateResponse(
+        request,
+        "partials/diff_result.html",
+        {
+            "error": error,
+            "diff_lines": diff_lines,
+            "order_sensitive": order_sensitive == "on",
+        },
+    )
 
 
 @app.post("/regex", response_class=HTMLResponse)
