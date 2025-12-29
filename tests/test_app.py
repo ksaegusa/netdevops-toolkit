@@ -61,3 +61,13 @@ def test_regex_endpoint_extracts_lines():
     assert response.status_code == 200
     assert "ERROR failed" in response.text
     assert "WARN note" not in response.text
+
+
+def test_regex_text_preview_upload_shows_content():
+    response = client.post(
+        "/regex/text-preview",
+        files={"text_upload": ("log.txt", b"alpha\nbeta", "text/plain")},
+    )
+    assert response.status_code == 200
+    assert "alpha" in response.text
+    assert "beta" in response.text

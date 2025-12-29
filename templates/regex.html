@@ -46,15 +46,7 @@
           </fieldset>
         </div>
         <div class="space-y-4">
-          <label class="block">
-            <span class="text-sm font-semibold">ログ本文</span>
-            <textarea
-              name="raw_text"
-              rows="10"
-              placeholder="ログを貼り付け"
-              class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
-            ></textarea>
-          </label>
+          {% include "partials/regex_textarea.html" %}
           <label class="block">
             <span class="text-sm font-semibold">テキストをアップロード</span>
             <input
@@ -62,6 +54,11 @@
               name="text_upload"
               accept=".txt,.log,.out,.text"
               class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
+              hx-post="/regex/text-preview"
+              hx-target="#regex-textarea"
+              hx-swap="outerHTML"
+              hx-trigger="change"
+              hx-encoding="multipart/form-data"
             />
           </label>
         </div>

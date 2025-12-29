@@ -144,6 +144,22 @@ def regex_page(request: Request) -> HTMLResponse:
     )
 
 
+@app.post("/regex/text-preview", response_class=HTMLResponse)
+def regex_text_preview(
+    request: Request,
+    text_upload: UploadFile | None = None,
+) -> HTMLResponse:
+    text_payload, error = read_text_payload("", text_upload)
+    return jinja.TemplateResponse(
+        request,
+        "partials/regex_textarea.html",
+        {
+            "text_content": text_payload,
+            "text_error": error,
+        },
+    )
+
+
 @app.get("/diff", response_class=HTMLResponse)
 def diff_page(request: Request) -> HTMLResponse:
     return jinja.TemplateResponse(request, "diff.html", {})
