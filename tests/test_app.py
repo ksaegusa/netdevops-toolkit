@@ -71,3 +71,77 @@ def test_regex_text_preview_upload_shows_content():
     assert response.status_code == 200
     assert "alpha" in response.text
     assert "beta" in response.text
+
+
+def test_diff_endpoint_ignores_order():
+    old_cfg = "\n".join(
+        [
+            "router ospf 1",
+            " network 10.0.0.0 0.0.0.255 area 0",
+            "interface Gig0/0",
+            " description uplink",
+        ]
+    )
+    new_cfg = "\n".join(
+        [
+            "interface Gig0/0",
+            " description uplink",
+            "router ospf 1",
+            " network 10.0.0.0 0.0.0.255 area 0",
+        ]
+    )
+    response = client.post(
+        "/diff",
+        data={"old_text": old_cfg, "new_text": new_cfg},
+    )
+    assert response.status_code == 200
+    assert "差分がありません" in response.text
+
+
+def test_diff_endpoint_detects_order_when_enabled():
+    old_cfg = "\n".join(
+        [
+            "router ospf 1",
+            " network 10.0.0.0 0.0.0.255 area 0",
+            "interface Gig0/0",
+            " description uplink",
+        ]
+    )
+    new_cfg = "\n".join(
+        [
+            "interface Gig0/0",
+            " description uplink",
+            "router ospf 1",
+            " network 10.0.0.0 0.0.0.255 area 0",
+        ]
+    )
+    response = client.post(
+        "/diff",
+        data={
+            "old_text": old_cfg,
+            "new_text": new_cfg,
+            "order_sensitive": "on",
+        },
+    )
+    assert response.status_code == 200
+    assert "差分がありません" not in response.text
+
+
+def test_diff_old_preview_upload_shows_content():
+    response = client.post(
+        "/diff/old-preview",
+        files={"old_upload": ("old.cfg", b"alpha\nbeta", "text/plain")},
+    )
+    assert response.status_code == 200
+    assert "alpha" in response.text
+    assert "beta" in response.text
+
+
+def test_diff_new_preview_upload_shows_content():
+    response = client.post(
+        "/diff/new-preview",
+        files={"new_upload": ("new.cfg", b"gamma\ndelta", "text/plain")},
+    )
+    assert response.status_code == 200
+    assert "gamma" in response.text
+    assert "delta" in response.text

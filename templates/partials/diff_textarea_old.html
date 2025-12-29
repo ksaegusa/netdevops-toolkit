@@ -1,0 +1,12 @@
+<label class="block" id="diff-old-textarea">
+  <span class="text-sm font-semibold">比較元</span>
+  <textarea
+    name="old_text"
+    rows="12"
+    placeholder="比較元を貼り付け"
+    class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+  >{{ old_text | default('') }}</textarea>
+  {% if old_error %}
+    <p class="mt-2 text-xs text-red-600">{{ old_error }}</p>
+  {% endif %}
+</label>
