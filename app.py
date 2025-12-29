@@ -96,9 +96,9 @@ def normalize_jmespath_for_eval(query: str) -> str:
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
     return jinja.TemplateResponse(
+        request,
         "index.html",
         {
-            "request": request,
             "templates": list_textfsm_templates(),
         },
     )
@@ -106,12 +106,12 @@ def index(request: Request) -> HTMLResponse:
 
 @app.get("/regex", response_class=HTMLResponse)
 def regex_page(request: Request) -> HTMLResponse:
-    return jinja.TemplateResponse("regex.html", {"request": request})
+    return jinja.TemplateResponse(request, "regex.html", {})
 
 
 @app.get("/diff", response_class=HTMLResponse)
 def diff_page(request: Request) -> HTMLResponse:
-    return jinja.TemplateResponse("diff.html", {"request": request})
+    return jinja.TemplateResponse(request, "diff.html", {})
 
 
 @app.post("/parse", response_class=HTMLResponse)
@@ -169,9 +169,9 @@ def parse(
         headers = list(parsed[0].keys())
 
     return jinja.TemplateResponse(
+        request,
         "partials/result.html",
         {
-            "request": request,
             "error": error,
             "parsed_json": json.dumps(parsed, ensure_ascii=False, indent=2) if parsed is not None else "",
             "parsed_headers": headers,
@@ -212,9 +212,9 @@ def filter_results(
         headers = list(parsed[0].keys())
 
     return jinja.TemplateResponse(
+        request,
         "partials/result.html",
         {
-            "request": request,
             "error": error,
             "parsed_json": json.dumps(parsed, ensure_ascii=False, indent=2) if parsed is not None else "",
             "parsed_headers": headers,
@@ -234,9 +234,9 @@ def template_editor(request: Request, template_name: str = "") -> HTMLResponse:
         template_path = TEXTFSM_DIR / template_name
         template_text = template_path.read_text(encoding="utf-8", errors="replace")
     return jinja.TemplateResponse(
+        request,
         "partials/template_editor.html",
         {
-            "request": request,
             "template_text": template_text,
         },
     )
