@@ -924,7 +924,9 @@ def regex_run(
     error = ""
     matches: list[str] = []
 
-    text_payload, error = read_text_payload(raw_text, text_upload)
+    text_payload, payload_error = read_text_payload(raw_text, text_upload)
+    if not error:
+        error = payload_error
     if not error and not pattern.strip():
         error = "正規表現パターンを入力してください。"
 
@@ -979,17 +981,26 @@ def parse(
     headers: list[str] = []
 
     template_from_upload = None
+    template_filename = ""
     if template_upload and template_upload.filename:
-        if not template_upload.filename.endswith(".textfsm"):
+        template_filename = template_upload.filename
+        if not template_filename.endswith(".textfsm"):
             error = "テンプレートは .textfsm 拡張子のみ対応しています。"
         else:
             template_from_upload = template_upload
 
-    text_payload, error = read_text_payload(raw_text, text_upload)
+    text_payload, payload_error = read_text_payload(raw_text, text_upload)
+    if not error:
+        error = payload_error
 
     if not error:
         eval_query = normalize_jmespath_for_eval(jmespath_query)
-        if not template_name and not template_from_upload and not template_body.strip():
+        if (
+            not template_name
+            and not template_from_upload
+            and not template_body.strip()
+            and not template_filename
+        ):
             error = "テンプレートを選択するか、アップロード、または直接入力してください。"
         else:
             try:
