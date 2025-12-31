@@ -7,6 +7,8 @@
   * **Parser**：テンプレで構造化 → 表表示 → JMESPathで絞り込み → CSV/YAMLダウンロード
   * **Regex**：行抽出 → 件数表示 → TXTダウンロード
   * **Diff**：ignore/target/順序無視の差分表示
+  * **Inspector**：JSON/YAMLの可視化（ツリー/パス一覧/値）
+  * **Model**：YANGのパス一覧/ツリー表示（サンプルJSONも生成）
 
 ## 2. ユーザーストーリー（MVP）
 
@@ -47,6 +49,18 @@
 * target prefix で特定ブロックのみ比較
 * 同一階層の順序入れ替わりは差分扱いしない（オプションで順序差分を有効化）
 * 追加/削除を色分けして表示
+
+### 3.5 Inspector
+
+* JSON/YAMLの貼り付け・アップロード
+* ツリービューとパス/値一覧の表示
+* JMESPathで任意抽出（任意入力）
+
+### 3.6 Model
+
+* YANGの貼り付け・アップロード
+* パス一覧とツリー表示
+* サンプルJSONの生成
 
 ## 4. 非機能要件（最低限）
 
@@ -96,7 +110,7 @@ docker compose up --build
 * アップロードしたテンプレ/テキストは保存せず、解析にのみ使用
 
 ## 将来対応リスト
-* Telemetry Inspector（テレメトリJSON/ログの抽出・可視化）
+* gNMI Inspector（Subscribe/Getの実データ取り込み・可視化）
 * Config Transformer（CLI/JSONの相互変換・整形）
 * OpenConfig/YANG Explorer（モデル検索・パス補完）
 * gNMI Playground（Get/Set/Subscribeのリクエスト作成・検証）
