@@ -1017,7 +1017,7 @@ def parse(
             except Exception as exc:  # pragma: no cover - surface parsing error
                 error = f"パースに失敗しました: {exc}"
 
-    if parsed:
+    if isinstance(parsed, list) and parsed:
         headers = list(parsed[0].keys())
 
     if request.headers.get("hx-request") == "true":
@@ -1088,7 +1088,7 @@ def filter_results(
         except Exception as exc:  # pragma: no cover - surface filter error
             error = f"JMESPathの適用に失敗しました: {exc}"
 
-    if parsed:
+    if isinstance(parsed, list) and parsed:
         headers = list(parsed[0].keys())
 
     return jinja.TemplateResponse(
