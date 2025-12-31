@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto flex max-w-screen-2xl flex-col gap-8 px-6 pb-20 pt-4">
+  <div class="space-y-3">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ember">Inspector</p>
+    <h1 class="font-display text-4xl uppercase tracking-[0.08em] md:text-5xl">INSPECT THE DATA</h1>
+    <p class="max-w-2xl text-lg text-ink/70">JSONやYAMLを読み込み、構造とパスを可視化します。</p>
+  </div>
+  <div class="rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+    <form
+      hx-post="/telemetry"
+      hx-target="#telemetry-result"
+      hx-swap="innerHTML"
+      onsubmit="return validateInspectorForm(this)"
+      class="space-y-6"
+    >
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div class="space-y-4">
+          <label class="block">
+            <span class="text-sm font-semibold">JSON/YAMLをアップロード</span>
+            <input
+              type="file"
+              name="telemetry_upload"
+              accept=".json,.yaml,.yml,.txt"
+              class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
+              hx-post="/telemetry/upload-preview"
+              hx-target="#telemetry-textarea"
+              hx-swap="outerHTML"
+              hx-trigger="change"
+              hx-encoding="multipart/form-data"
+              onclick="this.value=''"
+            />
+            <p class="mt-2 text-xs text-ink/60">例: data.json / data.yaml</p>
+          </label>
+          {% include "partials/telemetry_textarea.html" %}
+        </div>
+        <div class="space-y-4">
+          <label class="block">
+            <span class="text-sm font-semibold">JMESPath (任意)</span>
+            <input
+              type="text"
+              name="jmespath_query"
+              placeholder="interfaces.interface[].state"
+              class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+            />
+          </label>
+          <p class="text-xs text-ink/60">
+            例: <span class="font-mono">interfaces.interface[].state.counters</span><br />
+            エラー率例: (in-errors + out-errors) / in-octets
+          </p>
+        </div>
+      </div>
+      <p class="text-xs text-ink/60">アップロードしたファイルは保存せず、解析にのみ使用します。</p>
+      <p id="inspector-warning" class="hidden rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800"></p>
+      <div class="flex flex-col gap-3 md:flex-row">
+        <button
+          type="submit"
+          class="w-full rounded-full bg-ember px-4 py-3 text-sm font-semibold text-white transition hover:bg-emberDark"
+        >
+          表示する
+        </button>
+        <button
+          type="button"
+          class="w-full rounded-full border border-black/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-black/5"
+          onclick="window.location.href = '/telemetry';"
+        >
+          クリア
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="mx-auto max-w-screen-2xl px-6 pb-20">
+  <div id="telemetry-result" class="rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+    {% include "partials/telemetry_result.html" %}
+  </div>
+</section>
+{% endblock %}

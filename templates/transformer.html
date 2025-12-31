@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto flex max-w-screen-2xl flex-col gap-8 px-6 pb-20 pt-4">
+  <div class="space-y-3">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ember">Model Explorer</p>
+    <h1 class="font-display text-4xl uppercase tracking-[0.08em] md:text-5xl">EXPLORE THE MODEL</h1>
+    <p class="max-w-2xl text-lg text-ink/70">
+      YANGをアップロードするだけで、パス一覧とサンプルJSONを生成します。
+    </p>
+  </div>
+  <div class="rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+    <form
+      hx-post="/model/inspect"
+      hx-target="#model-result"
+      hx-swap="innerHTML"
+      onsubmit="return validateModelForm(this)"
+      class="space-y-6"
+    >
+      <div class="space-y-4" id="model-panel">
+        <label class="block">
+          <span class="text-sm font-semibold">YANGをアップロード（.yang）</span>
+          <input
+            type="file"
+            name="model_upload"
+            accept=".yang"
+            class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
+            hx-post="/model/upload-preview"
+            hx-target="#model-input"
+            hx-swap="outerHTML"
+            hx-trigger="change"
+            hx-encoding="multipart/form-data"
+            onclick="this.value=''"
+          />
+          <p class="mt-2 text-xs text-ink/60">アップロードしたYANGからパス一覧/サンプルJSONを生成します。</p>
+        </label>
+        {% include "partials/model_input.html" %}
+      </div>
+      <div class="rounded-2xl border border-black/10 bg-white px-4 py-3 text-xs text-ink/70">
+        <p class="font-semibold text-ink/80">この表示でカバーできていない仕様</p>
+        <p class="mt-1">
+          import/includeの解決、uses/augment/refine/deviationの展開、typedefやgroupingの型解決は未対応です。
+          submoduleはgrouping中心の簡易表示になります。
+        </p>
+      </div>
+      <p id="model-warning" class="hidden rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800"></p>
+      <div class="flex flex-col gap-3 md:flex-row">
+        <button
+          type="submit"
+          class="w-full rounded-full bg-ember px-4 py-3 text-sm font-semibold text-white transition hover:bg-emberDark"
+        >
+          パス一覧を表示
+        </button>
+        <button
+          type="button"
+          class="w-full rounded-full border border-black/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-black/5"
+          onclick="
+            window.location.href = '/model';
+          "
+        >
+          クリア
+        </button>
+      </div>
+    </form>
+    <div id="model-result" class="mt-6 rounded-3xl border border-black/10 bg-white p-6 shadow-lg">
+      {% include "partials/model_result.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -10,6 +10,8 @@
   <div class="w-full rounded-3xl border border-black/10 bg-white p-6 shadow-xl">
     <form
       id="parser-form"
+      method="post"
+      action="/parse"
       hx-post="/parse"
       hx-target="#result"
       hx-swap="innerHTML"
@@ -18,6 +20,15 @@
     >
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="space-y-4">
+          <label class="block">
+            <span class="text-sm font-semibold">テンプレートをアップロード (.textfsm)</span>
+            <input
+              type="file"
+              name="template_upload"
+              accept=".textfsm"
+              class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
+            />
+          </label>
           <label class="block">
             <span class="text-sm font-semibold">テンプレート</span>
             <select
@@ -37,26 +48,8 @@
           <div id="template-editor">
             {% include "partials/template_editor.html" %}
           </div>
-          <label class="block">
-            <span class="text-sm font-semibold">テンプレートをアップロード (.textfsm)</span>
-            <input
-              type="file"
-              name="template_upload"
-              accept=".textfsm"
-              class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
-            />
-          </label>
         </div>
         <div class="space-y-4">
-          <label class="block">
-            <span class="text-sm font-semibold">show出力</span>
-            <textarea
-              name="raw_text"
-              rows="14"
-              placeholder="show ip interface brief の結果を貼り付け"
-              class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
-            ></textarea>
-          </label>
           <label class="block">
             <span class="text-sm font-semibold">テキストをアップロード</span>
             <input
@@ -66,15 +59,33 @@
               class="mt-2 w-full rounded-xl border border-dashed border-black/20 bg-white px-3 py-2 text-sm"
             />
           </label>
+          <label class="block">
+            <span class="text-sm font-semibold">show出力</span>
+            <textarea
+              name="raw_text"
+              rows="14"
+              placeholder="show ip interface brief の結果を貼り付け"
+              class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+            >{{ raw_text | default('') }}</textarea>
+          </label>
         </div>
       </div>
       <p class="text-xs text-ink/60">アップロードしたファイルは保存せず、解析にのみ使用します。</p>
-      <button
-        type="submit"
-        class="w-full rounded-full bg-ember px-4 py-3 text-sm font-semibold text-white transition hover:bg-emberDark"
-      >
-        パースする
-      </button>
+      <div class="flex flex-col gap-3 md:flex-row">
+        <button
+          type="submit"
+          class="w-full rounded-full bg-ember px-4 py-3 text-sm font-semibold text-white transition hover:bg-emberDark"
+        >
+          パースする
+        </button>
+        <button
+          type="button"
+          class="w-full rounded-full border border-black/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-black/5"
+          onclick="window.location.href = '/';"
+        >
+          クリア
+        </button>
+      </div>
     </form>
   </div>
 </section>

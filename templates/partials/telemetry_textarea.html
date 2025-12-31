@@ -1,0 +1,12 @@
+<label class="block" id="telemetry-textarea" {% if textarea_oob %}hx-swap-oob="true"{% endif %}>
+  <span class="text-sm font-semibold">JSON/YAML本文</span>
+  <textarea
+    name="telemetry_text"
+    rows="12"
+    placeholder="JSONまたはYAMLを貼り付け"
+    class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-mono"
+  >{{ text_content | default('') }}</textarea>
+  {% if text_error %}
+    <p class="mt-2 text-xs text-red-600">{{ text_error }}</p>
+  {% endif %}
+</label>
