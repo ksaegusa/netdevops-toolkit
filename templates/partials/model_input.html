@@ -1,0 +1,12 @@
+<label class="block" id="model-input">
+  <span class="text-sm font-semibold">YANG本文</span>
+  <textarea
+    name="model_text"
+    rows="12"
+    placeholder="YANGを貼り付け"
+    class="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-mono"
+  >{{ text_content | default(default_yang) }}</textarea>
+  {% if text_error %}
+    <p class="mt-2 text-xs text-red-600">{{ text_error }}</p>
+  {% endif %}
+</label>

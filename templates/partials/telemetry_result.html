@@ -1,0 +1,71 @@
+{% macro render_tree(name, value) %}
+  {% if value is mapping %}
+    <details open class="rounded-xl border border-black/10 bg-white px-3 py-2">
+      <summary class="cursor-pointer font-mono text-xs">{{ name }}</summary>
+      <div style="margin-left: 12px;" class="space-y-1">
+        {% for key, item in value.items() %}
+          {{ render_tree(key, item) }}
+        {% endfor %}
+      </div>
+    </details>
+  {% elif value is sequence and value is not string %}
+    <details open class="rounded-xl border border-black/10 bg-white px-3 py-2">
+      <summary class="cursor-pointer font-mono text-xs">{{ name }} [{{ value | length }}]</summary>
+      <div style="margin-left: 12px;" class="space-y-1">
+        {% for item in value %}
+          {{ render_tree(loop.index0, item) }}
+        {% endfor %}
+      </div>
+    </details>
+  {% else %}
+    <div class="rounded-lg border border-black/10 bg-white px-3 py-2 font-mono text-xs">
+      {{ name }}: {{ value }}
+    </div>
+  {% endif %}
+{% endmacro %}
+
+<div {% if oob %}hx-swap-oob="true"{% endif %}>
+  {% if error %}
+    <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</p>
+  {% else %}
+    {% if telemetry_data %}
+      <div class="space-y-6">
+        <details open class="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <summary class="cursor-pointer text-sm font-semibold">ツリービュー</summary>
+          <div class="mt-3 max-h-[420px] overflow-auto space-y-2">
+            {{ render_tree("root", telemetry_data) }}
+          </div>
+        </details>
+        <div>
+          <h3 class="text-base font-semibold">パス/値の一覧</h3>
+          {% if flat_rows %}
+            <div class="mt-3 max-h-[420px] overflow-auto rounded-2xl border border-black/10">
+              <table class="min-w-full border-collapse text-left text-xs">
+                <thead class="bg-sand">
+                  <tr>
+                    <th class="border-b border-black/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ink/70">Path</th>
+                    <th class="border-b border-black/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ink/70">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in flat_rows %}
+                    <tr class="odd:bg-white even:bg-black/[0.02]">
+                      <td class="border-b border-black/5 px-3 py-2 font-mono">{{ row.path }}</td>
+                      <td class="border-b border-black/5 px-3 py-2 font-mono">{{ row.value }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-sm text-ink/60">表示できる値がありません。</p>
+          {% endif %}
+        </div>
+        <div>
+          <h3 class="text-base font-semibold">JMESPath 結果</h3>
+          <pre class="mt-3 max-h-[320px] overflow-auto rounded-2xl bg-ink px-4 py-4 text-xs text-white"><code>{{ filtered_json }}</code></pre>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>

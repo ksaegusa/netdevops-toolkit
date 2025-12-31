@@ -34,9 +34,85 @@
           <a href="/" class="rounded-full px-3 py-1 transition hover:bg-black/5">Parser</a>
           <a href="/regex" class="rounded-full px-3 py-1 transition hover:bg-black/5">Regex</a>
           <a href="/diff" class="rounded-full px-3 py-1 transition hover:bg-black/5">Diff</a>
+          <a href="/telemetry" class="rounded-full px-3 py-1 transition hover:bg-black/5">Inspector</a>
+          <a href="/model" class="rounded-full px-3 py-1 transition hover:bg-black/5">Model</a>
         </nav>
       </header>
       {% block content %}{% endblock %}
     </main>
+    <script>
+      const hasFile = (input) => Boolean(input && input.files && input.files.length > 0);
+
+      const toggleWarning = (id, message) => {
+        if (!id) return true;
+        const element = document.getElementById(id);
+        if (!element) return true;
+        if (message) {
+          element.textContent = message;
+          element.classList.remove("hidden");
+          return false;
+        }
+        element.textContent = "";
+        element.classList.add("hidden");
+        return true;
+      };
+
+      const validateParserForm = (form) => {
+        const templateName = form.querySelector("[name='template_name']")?.value.trim();
+        const templateBody = form.querySelector("[name='template_body']")?.value.trim();
+        const templateUpload = hasFile(form.querySelector("[name='template_upload']"));
+        const rawText = form.querySelector("[name='raw_text']")?.value.trim();
+        const textUpload = hasFile(form.querySelector("[name='text_upload']"));
+        if (!rawText && !textUpload) {
+          return toggleWarning("parser-warning", "テキストを入力するかアップロードしてください。");
+        }
+        if (!templateName && !templateBody && !templateUpload) {
+          return toggleWarning("parser-warning", "テンプレートを選択・入力・アップロードしてください。");
+        }
+        return toggleWarning("parser-warning", "");
+      };
+
+      const validateRegexForm = (form) => {
+        const pattern = form.querySelector("[name='pattern']")?.value.trim();
+        const rawText = form.querySelector("[name='raw_text']")?.value.trim();
+        const textUpload = hasFile(form.querySelector("[name='text_upload']"));
+        if (!pattern) {
+          return toggleWarning("regex-warning", "正規表現パターンを入力してください。");
+        }
+        if (!rawText && !textUpload) {
+          return toggleWarning("regex-warning", "テキストを入力するかアップロードしてください。");
+        }
+        return toggleWarning("regex-warning", "");
+      };
+
+      const validateDiffForm = (form) => {
+        const oldText = form.querySelector("[name='old_text']")?.value.trim();
+        const newText = form.querySelector("[name='new_text']")?.value.trim();
+        const oldUpload = hasFile(form.querySelector("[name='old_upload']"));
+        const newUpload = hasFile(form.querySelector("[name='new_upload']"));
+        if ((!oldText && !oldUpload) || (!newText && !newUpload)) {
+          return toggleWarning("diff-warning", "比較元と比較先の両方を入力してください。");
+        }
+        return toggleWarning("diff-warning", "");
+      };
+
+      const validateInspectorForm = (form) => {
+        const text = form.querySelector("[name='telemetry_text']")?.value.trim();
+        const upload = hasFile(form.querySelector("[name='telemetry_upload']"));
+        if (!text && !upload) {
+          return toggleWarning("inspector-warning", "JSON/YAMLを入力するかアップロードしてください。");
+        }
+        return toggleWarning("inspector-warning", "");
+      };
+
+      const validateModelForm = (form) => {
+        const text = form.querySelector("[name='model_text']")?.value.trim();
+        const upload = hasFile(form.querySelector("[name='model_upload']"));
+        if (!text && !upload) {
+          return toggleWarning("model-warning", "YANGを入力するかアップロードしてください。");
+        }
+        return toggleWarning("model-warning", "");
+      };
+    </script>
   </body>
 </html>

@@ -1,0 +1,39 @@
+{% if text_error %}
+  <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ text_error }}</p>
+{% else %}
+  {% if model_paths %}
+    <div class="space-y-6">
+      {% if tree_text %}
+        <div>
+          <h3 class="text-base font-semibold">ツリー表示</h3>
+          <pre class="mt-3 max-h-[320px] overflow-auto rounded-2xl bg-ink px-4 py-4 text-xs text-white"><code>{{ tree_text }}</code></pre>
+        </div>
+      {% endif %}
+      <div>
+        <h3 class="text-base font-semibold">パス一覧</h3>
+        <div class="max-h-[520px] overflow-auto rounded-2xl border border-black/10">
+          <table class="min-w-full border-collapse text-left text-xs">
+            <thead class="bg-sand">
+              <tr>
+                <th class="border-b border-black/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-ink/70">Path</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for path in model_paths %}
+                <tr class="odd:bg-white even:bg-black/[0.02]">
+                  <td class="border-b border-black/5 px-3 py-2 font-mono">{{ path }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% if sample_json %}
+        <div>
+          <h3 class="text-base font-semibold">サンプルJSON</h3>
+          <pre class="mt-3 max-h-[320px] overflow-auto rounded-2xl bg-ink px-4 py-4 text-xs text-white"><code>{{ sample_json }}</code></pre>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endif %}
