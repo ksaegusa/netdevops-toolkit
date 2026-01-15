@@ -17,13 +17,24 @@
         </div>
       </div>
       {% if parsed_rows %}
-        <div class="overflow-x-auto rounded-2xl border border-black/10">
-          <table class="min-w-full border-collapse text-left text-sm">
+        <div data-table-width-scope class="space-y-3">
+          <div class="overflow-x-auto rounded-2xl border border-black/10">
+            <table
+              class="border-collapse text-left text-sm"
+              data-table-width-target
+              style="min-width: var(--table-min-width, 100%);"
+            >
             <thead class="bg-sand">
               <tr>
                 {% for header in parsed_headers %}
-                  <th class="border-b border-black/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink/70">
+                  <th
+                    class="relative border-b border-black/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-ink/70"
+                  >
                     {{ header }}
+                    <span
+                      class="absolute right-0 top-0 h-full w-2 cursor-col-resize"
+                      data-col-resize-handle
+                    ></span>
                   </th>
                 {% endfor %}
               </tr>
@@ -37,7 +48,8 @@
                 </tr>
               {% endfor %}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       {% else %}
         <p class="text-sm text-ink/60">結果がありません。</p>
