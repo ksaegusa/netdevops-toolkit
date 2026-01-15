@@ -42,6 +42,23 @@
     </main>
     <script>
       const hasFile = (input) => Boolean(input && input.files && input.files.length > 0);
+      const bindUploadToTextarea = (fileInput, textarea, warningId) => {
+        if (!fileInput || !textarea) return;
+        fileInput.addEventListener("change", () => {
+          if (!hasFile(fileInput)) return;
+          const [file] = fileInput.files;
+          const reader = new FileReader();
+          reader.onload = () => {
+            textarea.value = reader.result ?? "";
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+            toggleWarning(warningId, "");
+          };
+          reader.onerror = () => {
+            toggleWarning(warningId, "テキストの読み込みに失敗しました。");
+          };
+          reader.readAsText(file);
+        });
+      };
 
       const toggleWarning = (id, message) => {
         if (!id) return true;
@@ -113,6 +130,14 @@
         }
         return toggleWarning("model-warning", "");
       };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const parserForm = document.getElementById("parser-form");
+        if (!parserForm) return;
+        const textUpload = parserForm.querySelector("[name='text_upload']");
+        const rawText = parserForm.querySelector("[name='raw_text']");
+        bindUploadToTextarea(textUpload, rawText, "parser-warning");
+      });
     </script>
   </body>
 </html>
