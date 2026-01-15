@@ -42,6 +42,40 @@
     </main>
     <script>
       const hasFile = (input) => Boolean(input && input.files && input.files.length > 0);
+      const bindUploadToTextarea = (
+        fileInput,
+        form,
+        textareaSelector,
+        warningId,
+        options = {}
+      ) => {
+        if (!fileInput || !form) return;
+        if (fileInput.dataset.bound === "1") return;
+        fileInput.dataset.bound = "1";
+        fileInput.addEventListener("change", () => {
+          if (!hasFile(fileInput)) return;
+          const textarea = form.querySelector(textareaSelector);
+          if (!textarea) return;
+          const [file] = fileInput.files;
+          const reader = new FileReader();
+          reader.onload = () => {
+            textarea.value = reader.result ?? "";
+            textarea.dispatchEvent(new Event("input", { bubbles: true }));
+            if (options.clearSelectSelector) {
+              const select = form.querySelector(options.clearSelectSelector);
+              if (select) select.value = "";
+            }
+            if (options.clearOnLoad) {
+              fileInput.value = "";
+            }
+            toggleWarning(warningId, "");
+          };
+          reader.onerror = () => {
+            toggleWarning(warningId, "テキストの読み込みに失敗しました。");
+          };
+          reader.readAsText(file);
+        });
+      };
 
       const toggleWarning = (id, message) => {
         if (!id) return true;
@@ -113,6 +147,66 @@
         }
         return toggleWarning("model-warning", "");
       };
+
+      const bindColumnResizers = (root = document) => {
+        root.querySelectorAll("table").forEach((table) => {
+          if (table.dataset.colResizeBound === "1") return;
+          const handles = table.querySelectorAll("[data-col-resize-handle]");
+          if (!handles.length) return;
+          table.dataset.colResizeBound = "1";
+          table.style.tableLayout = "fixed";
+          table.style.width = "max-content";
+
+          handles.forEach((handle) => {
+            if (handle.dataset.bound === "1") return;
+            handle.dataset.bound = "1";
+            const th = handle.closest("th");
+            if (!th) return;
+            th.style.minWidth = "80px";
+
+            const onPointerDown = (event) => {
+              event.preventDefault();
+              const startX = event.clientX;
+              const startWidth = th.getBoundingClientRect().width;
+              const onMove = (moveEvent) => {
+                const delta = moveEvent.clientX - startX;
+                const nextWidth = Math.max(60, startWidth + delta);
+                th.style.width = `${nextWidth}px`;
+              };
+              const onUp = () => {
+                document.removeEventListener("pointermove", onMove);
+                document.removeEventListener("pointerup", onUp);
+              };
+              document.addEventListener("pointermove", onMove);
+              document.addEventListener("pointerup", onUp);
+            };
+            handle.addEventListener("pointerdown", onPointerDown);
+          });
+        });
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const parserForm = document.getElementById("parser-form");
+        if (!parserForm) return;
+        const textUpload = parserForm.querySelector("[name='text_upload']");
+        bindUploadToTextarea(textUpload, parserForm, "[name='raw_text']", "parser-warning");
+        const templateUpload = parserForm.querySelector("[name='template_upload']");
+        bindUploadToTextarea(
+          templateUpload,
+          parserForm,
+          "[name='template_body']",
+          "parser-warning",
+          {
+            clearOnLoad: true,
+            clearSelectSelector: "[name='template_name']",
+          }
+        );
+        bindColumnResizers(document);
+      });
+
+      document.body.addEventListener("htmx:afterSwap", (event) => {
+        bindColumnResizers(event.target);
+      });
     </script>
   </body>
 </html>
